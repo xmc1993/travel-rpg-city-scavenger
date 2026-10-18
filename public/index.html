@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0d13">
+<title>旅行RPG · 城市拾遗</title>
+<style>
+  :root{
+    --bg:#0a0d13; --bg2:#11151f; --card:#151b28; --card2:#1b2333;
+    --line:rgba(255,255,255,.09); --ink:#eef2f8; --sub:#96a2b5; --dim:#68738a;
+    --gold:#e6b877; --gold2:#c9924a; --accent:#5b8cff; --ok:#37d39a; --err:#ff6b6b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#182338 0%,#0a0d13 55%);background-attachment:fixed;color:var(--ink);
+    font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  .serif{font-family:"Noto Serif SC","Songti SC",Georgia,serif;}
+  .wrap{max-width:660px;margin:0 auto;padding:0 16px 60px;}
+  .top{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(10,13,19,.92),rgba(10,13,19,.55));
+    border-bottom:1px solid var(--line);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+  .top .brand{font-size:16px;letter-spacing:2px;font-weight:600;}
+  .top .brand b{color:var(--gold);}
+  .top .act{margin-left:auto;display:flex;gap:10px;align-items:center;}
+  .top .lnk{color:var(--sub);font-size:13px;background:none;border:0;cursor:pointer;}
+  .top .quit{color:var(--gold);font-size:12.5px;background:rgba(230,184,119,.1);border:1px solid rgba(230,184,119,.35);border-radius:20px;padding:5px 12px;cursor:pointer;display:none;transition:.18s;}
+  .top .quit.danger{color:#fff;background:rgba(255,107,107,.92);border-color:#ff6b6b;animation:qPulse 1s ease-in-out infinite;}
+  @keyframes qPulse{50%{box-shadow:0 0 0 4px rgba(255,107,107,.18);}}
+  .view{display:none;animation:fade .5s ease;}
+  .view.on{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;}}
+  .hero{padding:30px 4px 20px;text-align:center;}
+  .hero h1{margin:0;font-size:29px;letter-spacing:4px;font-weight:700;}
+  .hero h1 b{color:var(--gold);}
+  .hero p{margin:12px 0 0;color:var(--sub);font-size:14px;letter-spacing:1px;}
+  .hero .rule{width:44px;height:2px;background:var(--gold);margin:18px auto 0;opacity:.7;}
+  .who{display:none;align-items:center;justify-content:center;gap:8px;margin:14px auto 0;font-size:13px;color:var(--sub);}
+  .who.on{display:flex;}
+  .who b{color:var(--gold);font-weight:600;}
+  .who .rn{background:none;border:1px solid var(--line);border-radius:20px;color:var(--dim);font-size:11.5px;padding:2px 9px;cursor:pointer;margin-left:2px;}
+  .resume{display:none;margin:4px 0 18px;border:1px solid rgba(230,184,119,.4);background:rgba(230,184,119,.07);border-radius:14px;padding:12px 14px;align-items:center;gap:12px;}
+  .resume.on{display:flex;}
+  .resume .ri{flex:1;font-size:13px;color:#e9d3ab;}
+  .resume button{border:0;border-radius:9px;padding:8px 13px;font-size:13px;cursor:pointer;}
+  .resume .go{background:var(--gold);color:#1a1206;font-weight:600;}
+  .resume .no{background:var(--card2);color:var(--sub);}
+  .sec{margin:26px 0 14px;display:flex;align-items:baseline;gap:10px;}
+  .sec h2{margin:0;font-size:17px;letter-spacing:2px;}
+  .sec span{color:var(--dim);font-size:12px;}
+  .routes{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:420px){.routes{grid-template-columns:1fr;}}
+  .rcard{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:3/3.6;
+    border:1px solid var(--line);cursor:pointer;background:var(--card);
+    box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .25s,box-shadow .25s;}
+  .rcard:active{transform:scale(.97);}
+  .rcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s;}
+  .rcard:hover img{transform:scale(1.06);}
+  .rcard .ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,11,18,.05) 30%,rgba(8,11,18,.86) 100%);}
+  .rcard .txt{position:absolute;left:0;right:0;bottom:0;padding:14px 15px;}
+  .rcard .txt .nm{font-size:18px;font-weight:600;letter-spacing:1px;}
+  .rcard .txt .st{font-size:12px;color:#d7c19a;margin-top:3px;letter-spacing:1px;}
+  .rcard .txt .city{position:absolute;top:12px;left:14px;font-size:11px;color:#fff;letter-spacing:1px;
+    background:rgba(10,13,19,.5);border:1px solid var(--line);border-radius:20px;padding:3px 10px;backdrop-filter:blur(6px);}
+  .rcard .sk{position:absolute;inset:0;background:linear-gradient(100deg,#151b28 30%,#1e2740 50%,#151b28 70%);background-size:200% 100%;animation:sh 1.4s infinite;}
+  @keyframes sh{to{background-position:-200% 0;}}
+  .soon{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px;}
+  .soon .s{position:relative;border:1px dashed var(--line);border-radius:14px;padding:22px 10px;text-align:center;
+    background:var(--bg2);filter:saturate(.4);opacity:.72;}
+  .soon .s .n{font-size:15px;color:var(--sub);letter-spacing:1px;}
+  .soon .s .t{font-size:10.5px;color:var(--dim);margin-top:6px;}
+  .soon .s .badge{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:9.5px;
+    background:var(--card2);border:1px solid var(--line);color:var(--gold);border-radius:20px;padding:2px 8px;white-space:nowrap;}
+  .dcover{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:16/10;margin-top:8px;}
+  .dcover img{width:100%;height:100%;object-fit:cover;}
+  .dcover .ov{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(8,11,18,.92));}
+  .dcover .cap{position:absolute;left:0;right:0;bottom:0;padding:18px;}
+  .dcover .cap h2{margin:0;font-size:24px;letter-spacing:2px;}
+  .dcover .cap .st{color:#d7c19a;font-size:13px;margin-top:4px;}
+  .intro{color:var(--sub);font-size:14px;margin:16px 2px;line-height:1.8;}
+  .strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;}
+  .strip::-webkit-scrollbar{display:none;}
+  .chip{flex:none;width:96px;}
+  .chip .im{width:96px;height:96px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--card);}
+  .chip .im img{width:100%;height:100%;object-fit:cover;}
+  .chip .cn{font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.35;}
+  .plabel{font-size:13px;color:var(--sub);margin:18px 2px 8px;letter-spacing:1px;}
+  .seg{display:flex;gap:10px;}
+  .sg{flex:1;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:11px 6px;text-align:center;cursor:pointer;transition:.2s;}
+  .sg b{display:block;font-size:14px;}
+  .sg span{font-size:11px;color:var(--dim);}
+  .sg.on{border-color:var(--gold);background:rgba(230,184,119,.08);}
+  .sg.on b{color:var(--gold);}
+  .modes{display:flex;gap:12px;margin:16px 0 12px;}
+  .mode{flex:1;border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:14px;text-align:center;cursor:pointer;transition:.2s;}
+  .mode b{display:block;font-size:15px;}
+  .mode span{font-size:11.5px;color:var(--dim);}
+  .mode.on{border-color:var(--gold);background:rgba(230,184,119,.08);}
+  .mode.on b{color:var(--gold);}
+  .btn{width:100%;border:0;border-radius:14px;padding:16px;font-size:16px;letter-spacing:2px;cursor:pointer;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1206;font-weight:700;
+    box-shadow:0 10px 26px rgba(201,146,74,.28);}
+  .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);font-weight:500;box-shadow:none;margin-top:10px;}
+  .prog{margin:16px 2px 4px;}
+  .prog .lab{font-size:11.5px;color:var(--dim);text-align:center;margin-top:6px;}
+  .nodes{display:flex;flex-direction:column;gap:16px;margin-top:8px;}
+  .node{border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--card);
+    box-shadow:0 14px 40px rgba(0,0,0,.4);animation:fade .5s ease;}
+  .node .hero2{position:relative;aspect-ratio:16/10;}
+  .node .hero2 img{width:100%;height:100%;object-fit:cover;}
+  .node .hero2 .ov{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(16,20,30,.96));}
+  .node .hero2 .loc{position:absolute;left:16px;right:16px;bottom:14px;}
+  .node .hero2 .loc .tt{font-size:20px;font-weight:700;letter-spacing:1px;text-shadow:0 2px 12px rgba(0,0,0,.6);}
+  .node .hero2 .loc .bd{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:#e9d3ab;
+    background:rgba(10,13,19,.5);border:1px solid var(--line);border-radius:20px;padding:4px 11px;backdrop-filter:blur(6px);}
+  .node .body{padding:16px 17px 18px;}
+  .node .story{font-size:15.5px;line-height:1.95;color:#dde5f0;white-space:pre-wrap;}
+  .node.live .story::after{content:"▍";color:var(--gold);animation:bl 1s steps(1) infinite;}
+  @keyframes bl{50%{opacity:0;}}
+  /* —— 场景入场编排：仅作用于新到达的 live 节点，历史节点不重播 —— */
+  @keyframes imgIn{from{opacity:0;transform:scale(1.12)}to{opacity:1;transform:scale(1)}}
+  @keyframes ink{from{opacity:0;filter:blur(7px)}to{opacity:1;filter:blur(0)}}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes grow{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
+  .node.anim .hero2 img{animation:imgIn .9s cubic-bezier(.2,.7,.2,1) both}
+  .node.anim .hero2 .ov{animation:ink .7s ease both .1s}
+  .node.anim .tt{animation:rise .6s ease both .18s}
+  .node.anim .loc .bd{animation:rise .6s ease both .3s}
+  .node.anim .story{animation:ink .6s ease both .12s}
+  .node.anim .ch{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*90ms + 340ms)}
+  .node.anim .arrive{animation:rise .5s ease both}
+  /* 结局卡：逐层浮现 */
+  .endcard .band{transform-origin:left;animation:grow .7s ease both}
+  .endcard .tag{animation:rise .5s ease both .1s}
+  .endcard h3{animation:rise .6s ease both .2s}
+  .endcard img{animation:imgIn .9s cubic-bezier(.2,.7,.2,1) both .15s}
+  .endcard .es{animation:ink .6s ease both .3s}
+  .endcard .sum{animation:rise .6s ease both .5s}
+  .endcard .trail{animation:rise .6s ease both .68s}
+  .endcard .btn{animation:rise .6s ease both .82s}
+  /* 忙碌指示：推进/开局等待时的呼吸光点 + 旋转环 */
+  .status.busy{display:inline-flex;align-items:center;gap:9px;justify-content:center;color:#c7d2e3}
+  .status .orb{width:13px;height:13px;flex:none;border-radius:50%;
+    border:2px solid rgba(230,184,119,.25);border-top-color:var(--gold);animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .status .dots i{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--gold);margin:0 1.5px;
+    animation:dotp 1.1s ease-in-out infinite}
+  .status .dots i:nth-child(2){animation-delay:.18s}
+  .status .dots i:nth-child(3){animation-delay:.36s}
+  @keyframes dotp{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+  /* 选择后：旧选项平滑淡出，而非瞬间移除 */
+  .choices.out{opacity:0;transform:translateY(-6px);transition:opacity .32s ease,transform .32s ease;pointer-events:none}
+  .node .chosen{color:var(--accent);font-size:13px;margin:2px 0 12px;}
+  .choices{display:flex;flex-direction:column;gap:11px;margin-top:14px;}
+  .ch{border:1.5px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card2);cursor:pointer;transition:.2s;}
+  .ch:active{border-color:var(--gold);transform:scale(.99);}
+  .ch .row{display:flex;gap:12px;padding:12px 13px;align-items:center;}
+  .ch .thumb{width:56px;height:56px;border-radius:10px;overflow:hidden;flex:none;background:var(--card);border:1px solid var(--line);}
+  .ch .thumb img{width:100%;height:100%;object-fit:cover;}
+  .ch .ci{flex:1;min-width:0;}
+  .ch .ci .t{font-size:14.5px;line-height:1.5;}
+  .ch .ci .t b{color:var(--gold);}
+  .ch .ci .m{font-size:11.5px;color:var(--sub);margin-top:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .ch .nav{flex:none;font-size:11.5px;color:var(--accent);border:1px solid var(--line);border-radius:9px;padding:7px 9px;text-decoration:none;}
+  .arrive{margin:12px 13px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(55,211,154,.07);font-size:13px;color:#bfe9d6;display:flex;align-items:center;gap:10px;}
+  .arrive .r{margin-left:auto;background:var(--ok);color:#04140d;border:0;border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;}
+  .endcard{border-radius:22px;overflow:hidden;border:1px solid rgba(230,184,119,.4);background:linear-gradient(180deg,#1b2333,#141a27);box-shadow:0 18px 50px rgba(0,0,0,.5);animation:fade .6s ease;}
+  .endcard .band{height:5px;background:linear-gradient(90deg,var(--gold2),var(--gold),var(--gold2));}
+  .endcard .ebody{padding:22px 20px;}
+  .endcard .tag{font-size:12px;letter-spacing:3px;color:var(--gold);text-align:center;}
+  .endcard h3{text-align:center;font-size:23px;margin:10px 0 16px;letter-spacing:1px;}
+  .endcard .es{font-size:15px;line-height:1.95;color:#e6ecf6;white-space:pre-wrap;}
+  .endcard .sum{margin-top:16px;padding:13px 15px;border-radius:12px;background:rgba(10,13,19,.5);border:1px solid var(--line);font-size:13.5px;color:var(--sub);line-height:1.8;}
+  .endcard .trail{margin-top:14px;font-size:12.5px;color:var(--dim);}
+  .endcard .trail b{color:var(--gold);}
+  .status{color:var(--sub);font-size:13.5px;margin:14px 2px;min-height:20px;text-align:center;}
+  .status.err{color:var(--err);}
+  .foot{text-align:center;color:var(--dim);font-size:11.5px;margin-top:26px;line-height:1.8;}
+  /* 锁屏 */
+  .lock{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(900px 500px at 50% 0%,#16213a 0%,#070a11 70%);padding:24px;}
+  .lock .box{width:100%;max-width:340px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px 24px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+  .lock .lg{font-size:24px;letter-spacing:3px;margin:0 0 4px;}
+  .lock .lg b{color:var(--gold);}
+  .lock .ls{color:var(--sub);font-size:13px;margin:0 0 20px;}
+  .lock input{width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);color:var(--ink);font-size:16px;letter-spacing:3px;text-align:center;}
+  .lock input:focus{outline:none;border-color:var(--gold);}
+  .lock .btn{margin-top:14px;}
+  .lock .le{color:var(--err);font-size:12.5px;min-height:18px;margin-top:10px;}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001ms!important;animation-delay:0!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+    .node.anim .story,.node.anim .hero2 img,.endcard .es,.endcard img{filter:none!important;opacity:1!important;transform:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand serif">旅行RPG · <b>城市拾遗</b></div>
+  <div class="act">
+    <button class="quit" id="quitBtn">结束本局</button>
+    <button class="lnk" id="backBtn" style="display:none">‹ 返回选线</button>
+  </div>
+</div>
+<div class="wrap">
+  <section class="view on" id="vPick">
+    <div class="hero">
+      <h1 class="serif">脚下的城，<b>一局戏</b></h1>
+      <p>选一条精心编排的经典线路，让真实景点带你走进一段冒险</p>
+      <div class="rule"></div>
+      <div class="who" id="who"></div>
+    </div>
+    <div class="resume" id="resume"></div>
+    <div class="sec"><h2 class="serif">经典线路</h2><span>真实景点 · 配图剧情</span></div>
+    <div class="routes" id="routes"></div>
+    <div class="sec"><h2 class="serif">更多地域</h2><span>建设中 · 待开放</span></div>
+    <div class="soon" id="soon"></div>
+    <div class="foot">2026 飞猪 AI 旅行创新大赛参赛作品 · 线路景点均来自飞猪真实检索</div>
+  </section>
+  <section class="view" id="vDetail"></section>
+  <section class="view" id="vStory">
+    <div class="prog" id="prog"></div>
+    <div class="nodes" id="nodes"></div>
+    <div class="status" id="status"></div>
+  </section>
+</div>
+
+<div class="lock" id="vLock" style="display:none">
+  <div class="box">
+    <div class="lg serif">旅行RPG · <b>城市拾遗</b></div>
+    <p class="ls">给自己起个名字，开始这段城市冒险</p>
+    <input id="nameInput" type="text" placeholder="你的旅行名字" maxlength="16" autocomplete="off">
+    <button class="btn serif" id="nameGo">进入冒险</button>
+    <div class="le" id="nameErr"></div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const SAVE = 'trpg_save_v2';
+const SNAME = 'trpg_name';
+let mode='探索型', length='standard', routeId=null, routeNodes=[], sessionId=null, curSid=null;
+let maxNodes=5, G=null;   // G = 存档 {sid,route,mode,length,maxNodes,nodes:[],ended}
+
+function getName(){ try{ return (localStorage.getItem(SNAME)||'').trim(); }catch(e){ return ''; } }
+function boot(){
+  if(getName()){ showWho(); enterApp(); }
+  else showNameGate();
+}
+function showNameGate(){
+  $('#vLock').style.display='flex';
+  $('#nameErr').textContent='';
+  $('#nameGo').onclick=submitName;
+  $('#nameInput').onkeydown=e=>{ if(e.key==='Enter') submitName(); };
+  setTimeout(()=>$('#nameInput').focus(),120);
+}
+function submitName(){
+  const n=$('#nameInput').value.trim();
+  if(!n){ $('#nameErr').textContent='先给自己起个名字吧'; return; }
+  try{ localStorage.setItem(SNAME, n.slice(0,16)); }catch(e){}
+  $('#vLock').style.display='none';
+  showWho(); enterApp();
+}
+function showWho(){
+  const n=getName(), el=$('#who');
+  if(!n){ el.className='who'; el.innerHTML=''; return; }
+  el.className='who on';
+  el.innerHTML='旅行者 · <b>'+esc(n)+'</b> <span class="rn" id="rnBtn">改名</span>';
+  $('#rnBtn').onclick=()=>{ try{ localStorage.removeItem(SNAME); }catch(e){} showWho(); showNameGate(); };
+}
+async function enterApp(){
+  try{ const r=await fetch('/api/routes',{credentials:'same-origin'}); const d=await r.json(); renderRoutes(d.routes||[]); }
+  catch(e){ $('#routes').innerHTML='<div style="color:var(--err);grid-column:1/-1">线路加载失败，请刷新</div>'; }
+  renderResume();
+}
+function renderRoutes(routes){
+  const box=$('#routes');
+  if(!routes.length){ box.innerHTML='<div style="color:var(--sub)">暂无线路</div>'; return; }
+  box.innerHTML=routes.map(rt=>`
+    <div class="rcard" data-id="${rt.id}">
+      <div class="sk"></div>
+      <img src="${rt.cover||''}" alt="${rt.name}" onload="var s=this.previousElementSibling;if(s)s.remove();this.style.opacity=1" onerror="this.style.opacity=0" style="opacity:0;transition:opacity .5s">
+      <div class="ov"></div>
+      <span class="city">${rt.city} · ${rt.count}景</span>
+      <div class="txt"><div class="nm serif">${rt.name}</div><div class="st">${rt.subtitle||''}</div></div>
+    </div>`).join('');
+  box.querySelectorAll('.rcard').forEach(c=>c.onclick=()=>openDetail(c.dataset.id, routes));
+  const cur=new Set(routes.map(r=>r.city));
+  const more=[['上海','十里洋场'],['西安','长安古意'],['南京','金陵怀古'],['苏州','园林小筑'],['成都','锦官城事'],['广州','羊城旧事']];
+  $('#soon').innerHTML=more.filter(([c])=>!cur.has(c)).map(([c,t])=>`<div class="s"><span class="badge">建设中</span><div class="n serif">${c}</div><div class="t">${t}</div></div>`).join('');
+}
+function renderResume(){
+  let s=null; try{ s=JSON.parse(localStorage.getItem(SAVE)||'null'); }catch(e){}
+  const bar=$('#resume');
+  if(s && s.sid && !s.ended && s.nodes && s.nodes.length){
+    G=s;
+    bar.className='resume on';
+    bar.innerHTML=`<div class="ri">▶ 有一局未完成：${s.nodes[s.nodes.length-1].node_title||'冒险途中'}（第 ${s.nodes.length} 幕）</div>
+      <button class="no">放弃</button><button class="go">继续</button>`;
+    bar.querySelector('.go').onclick=resumeRun;
+    bar.querySelector('.no').onclick=()=>{ localStorage.removeItem(SAVE); G=null; bar.className='resume'; };
+  } else { bar.className='resume'; }
+}
+function openDetail(id, routes){
+  const rt=routes.find(r=>r.id===id); if(!rt) return;
+  routeId=id; routeNodes=rt.previews||[];
+  $('#vDetail').innerHTML=`
+    <div class="dcover">
+      <img src="${rt.cover||''}" alt="${rt.name}"><div class="ov"></div>
+      <div class="cap"><h2 class="serif">${rt.name}</h2><div class="st">${rt.subtitle||''} · ${rt.city} · ${rt.count} 个景点</div></div>
+    </div>
+    <div class="intro">${rt.intro||''}</div>
+    <div class="sec" style="margin:22px 0 10px"><h2 class="serif" style="font-size:15px">线路景点</h2></div>
+    <div class="strip">${(rt.previews||[]).map(p=>`<div class="chip"><div class="im"><img src="${p.img||''}" alt="${p.name}" loading="lazy"></div><div class="cn">${p.name}</div></div>`).join('')}</div>
+    <div class="plabel serif">选择局长</div>
+    <div class="seg" id="lens">
+      <div class="sg" data-len="short"><b>精短</b><span>约 3 幕</span></div>
+      <div class="sg on" data-len="standard"><b>标准</b><span>约 5 幕</span></div>
+      <div class="sg" data-len="full"><b>完整</b><span>走完 ${rt.count} 景</span></div>
+    </div>
+    <div class="modes">
+      <div class="mode on" data-mode="探索型"><b>探索型</b><span>景点漫游 · 氛围支线</span></div>
+      <div class="mode" data-mode="闯关型"><b>闯关型</b><span>景点串成动线</span></div>
+    </div>
+    <button class="btn serif" id="goBtn">开始这局冒险</button>
+    <div class="foot">到达指定幕数会收束为大结局；也可随时点右上角「结束本局」</div>`;
+  $('#vDetail').querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
+    $('#vDetail').querySelectorAll('.mode').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); mode=b.dataset.mode; });
+  $('#vDetail').querySelectorAll('.sg').forEach(b=>b.onclick=()=>{
+    $('#vDetail').querySelectorAll('.sg').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); length=b.dataset.len; });
+  $('#goBtn').onclick=startRun;
+  switchView('vDetail');
+}
+let quitArmed=false, quitTimer=null;
+function disarmQuit(){
+  quitArmed=false;
+  if(quitTimer){ clearTimeout(quitTimer); quitTimer=null; }
+  const b=$('#quitBtn');
+  if(b){ b.textContent='结束本局'; b.classList.remove('danger'); }
+}
+function armQuit(){
+  const b=$('#quitBtn');
+  if(!quitArmed){
+    quitArmed=true;
+    b.textContent='确认结束？'; b.classList.add('danger');
+    quitTimer=setTimeout(disarmQuit, 4000);   // 4s 内不再点则自动取消
+    return;
+  }
+  disarmQuit();
+  finishRun();
+}
+function switchView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  $('#'+id).classList.add('on');
+  $('#backBtn').style.display = id==='vDetail' ? 'block' : 'none';
+  $('#backBtn').onclick=()=>{ stopListen(); disarmQuit(); switchView('vPick'); renderResume(); };
+  disarmQuit();
+  $('#quitBtn').style.display = id==='vStory' && !(G&&G.ended) ? 'inline-block' : 'none';
+  $('#quitBtn').onclick=armQuit;
+  window.scrollTo(0,0);
+}
+async function startRun(){
+  $('#nodes').innerHTML=''; switchView('vStory');
+  setStatus('正在编排剧情，请稍候…','info');
+  try{
+    const r=await fetch('/api/session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({route:routeId,mode,length})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||'开局失败');
+    sessionId=j.sessionId; maxNodes=j.maxNodes||5;
+    G={sid:sessionId,route:routeId,mode,length,maxNodes,nodes:[],ended:false}; save();
+    renderProgress(null); listen(sessionId);
+  }catch(e){ setStatus('出错了：'+e.message,'err'); }
+}
+function resumeRun(){
+  if(!G||!G.nodes.length) return;
+  $('#nodes').innerHTML=''; maxNodes=G.maxNodes||5; sessionId=curSid=G.sid;
+  G.nodes.forEach((n,i)=>renderNode(n,{live:false,keep:false}));
+  switchView('vStory'); setStatus(''); renderProgress((G.nodes[G.nodes.length-1]||{}).bound&&G.nodes[G.nodes.length-1].bound.name);
+}
+let es=null;
+function listen(sid){ curSid=sid; stopListen(); es=new EventSource('/api/stream/'+sid);
+  es.onmessage=e=>{ const ev=JSON.parse(e.data);
+    if(ev.type==='node'){ onNode(ev.node); }
+    else if(ev.type==='error'){ setStatus(ev.message,'err'); }
+    else if(ev.type==='done'){ setStatus(''); }
+  };
+  es.onerror=()=>{ /* 会话结束由 done 处理 */ };
+}
+function stopListen(){ if(es){ try{es.close();}catch(e){} es=null; } }
+function onNode(node){
+  markDone(); setStatus('');
+  if(G){ G.nodes.push(node); if(G.nodes.length>20) G.nodes.shift(); if(node.ending) G.ended=true; save(); }
+  renderNode(node,{live:true}); renderProgress(node.bound&&node.bound.name);
+  if(node.ending) setTimeout(()=>stopListen(),300);
+}
+function renderProgress(activeName){
+  const total=maxNodes||routeNodes.length;
+  const cur=G?G.nodes.length:0;
+  const dots=Array.from({length:total},(_,i)=>{
+    const k=i+1; const c=k<cur?'var(--gold2)':k===cur?'var(--gold)':'var(--line)';
+    return `<div style="flex:1;height:3px;border-radius:2px;background:${c}"></div>`; }).join('');
+  $('#prog').innerHTML=`<div style="display:flex;gap:6px">${dots}</div><div class="lab">${activeName?('此刻 · '+activeName+'（第 '+cur+'/'+total+' 幕）'):('共 '+total+' 幕 · 剧情即将展开')}</div>`;
+}
+function setStatus(t,type){ const el=$('#status');
+  if(type==='info' && t){
+    el.className='status busy'; el.innerHTML='';
+    const orb=document.createElement('span'); orb.className='orb'; el.appendChild(orb);
+    const s=document.createElement('span'); s.textContent=t; el.appendChild(s);
+    const d=document.createElement('span'); d.className='dots'; d.innerHTML='<i></i><i></i><i></i>'; el.appendChild(d);
+  } else { el.className='status'+(type==='err'?' err':''); el.textContent=t||''; }
+}
+function amapUrl(poi){ if(!poi||poi.lat==null||poi.lng==null) return '';
+  return 'https://uri.amap.com/marker?position='+encodeURIComponent(poi.lng+','+poi.lat)+'&name='+encodeURIComponent(poi.name||'目的地')+'&coordinate=gaode&callnative=1'; }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderNode(node,o){
+  o=o||{}; const box=$('#nodes');
+  if(node.ending){ renderEnd(node); return; }
+  const el=document.createElement('div'); el.className='node'+(o.live?' live anim':'');
+  const b=node.bound||{};
+  const hero=b.img?`<div class="hero2"><img src="${b.img}" alt="${b.name}" loading="lazy"><div class="ov"></div>
+      <div class="loc"><div class="tt serif">${node.node_title||''}</div>
+      <span class="bd">📍 ${b.name||''}${b.distance_m!=null?(' · '+b.distance_m+'m'):''}</span></div></div>`
+    :`<div style="padding:16px 17px 0"><div class="tt serif" style="font-size:20px;font-weight:700">${node.node_title||''}</div></div>`;
+  el.innerHTML=hero+`<div class="body"><div class="story">${esc(node.story)}</div><div class="choices"></div></div>`;
+  const cbox=el.querySelector('.choices');
+  (node.choices||[]).forEach((c,ci)=>{
+    const ch=document.createElement('div'); ch.className='ch'; ch.style.setProperty('--i',ci); const nav=amapUrl(c);
+    ch.innerHTML=`<div class="row">
+      ${c.img?`<div class="thumb"><img src="${c.img}" alt="${c.name}" loading="lazy"></div>`:''}
+      <div class="ci"><div class="t"><b>${esc(c.key)}.</b> ${esc(c.text)}</div>
+        <div class="m"><span>${esc(c.name||'')}</span>${c.walk_min!=null?`<span>· 步行约 ${c.walk_min} 分</span>`:''}</div></div>
+      ${nav?`<a class="nav" href="${nav}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🧭导航</a>`:''}
+    </div>`;
+    if(!o.live || o.doneChoices){ ch.onclick=()=>choose(node,c,el); }
+    cbox.appendChild(ch);
+  });
+  box.appendChild(el);
+  if(o.live) setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+function renderEnd(node){
+  const box=$('#nodes'); const el=document.createElement('div'); el.className='endcard';
+  const b=node.bound||{};
+  const trail=(G&&G.nodes)?G.nodes.map(n=>(n.bound&&n.bound.name)).filter(Boolean):[];
+  el.innerHTML=`<div class="band"></div><div class="ebody">
+    <div class="tag">本 局 · 完</div>
+    <h3 class="serif">${node.node_title||'尾声'}</h3>
+    ${b.img?`<img src="${b.img}" style="width:100%;height:180px;object-fit:cover;border-radius:14px;margin-bottom:14px" alt="">`:''}
+    <div class="es">${esc(node.story)}</div>
+    ${node.summary?`<div class="sum">${esc(node.summary)}</div>`:''}
+    ${trail.length?`<div class="trail">此程足迹：<b>${esc(trail.join(' › '))}</b></div>`:''}
+    ${getName()?`<div class="trail">本局旅行者：<b>${esc(getName())}</b></div>`:''}
+    <button class="btn serif" style="margin-top:18px" id="againBtn">再开一局</button>
+  </div>`;
+  box.appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  $('#againBtn').onclick=()=>{ localStorage.removeItem(SAVE); G=null; stopListen(); switchView('vPick'); renderResume(); };
+}
+function choose(node,c,wrap){
+  wrap.querySelectorAll('.ch').forEach(x=>x.onclick=null);
+  wrap.querySelectorAll('.choices').forEach(x=>{ x.classList.add('out'); setTimeout(()=>x.remove(),340); });
+  wrap.classList.remove('live');
+  const line=document.createElement('div'); line.className='chosen';
+  line.textContent='▶ 我选择 '+c.key+'：'+(c.text||'')+' → '+(c.name||'');
+  wrap.querySelector('.body').insertBefore(line, wrap.querySelector('.story'));
+  const needArrive = node.checkin && node.checkin.mode==='arrive' && c.lat!=null && c.lng!=null;
+  if(!needArrive){ advance(c); return; }
+  const radius=(node.checkin.radius_m)||120;
+  const card=document.createElement('div'); card.className='arrive';
+  card.innerHTML=`<span>🧭 前往 <b>${esc(c.name)}</b> · <span class="d">到达约 ${radius}m 内解锁</span></span><button class="r">我已到达 / 跳过</button>`;
+  wrap.querySelector('.body').appendChild(card);
+  let wid=null; const done=() => { if(wid!=null&&navigator.geolocation)navigator.geolocation.clearWatch(wid); advance(c); };
+  card.querySelector('.r').onclick=done;
+  if(navigator.geolocation){
+    wid=navigator.geolocation.watchPosition(pos=>{
+      const d=haversine(pos.coords.latitude,pos.coords.longitude,c.lat,c.lng);
+      card.querySelector('.d').textContent='距目的地约 '+Math.round(d)+' 米';
+      if(d<=radius){ card.querySelector('.d').textContent='✅ 已到达，剧情解锁…'; setTimeout(done,600); }
+    },()=>{},{enableHighAccuracy:true,timeout:10000,maximumAge:2000});
+  }
+}
+function haversine(a1,o1,a2,o2){const R=6371000,p=Math.PI/180;
+  const x=Math.sin((a2-a1)*p/2)**2+Math.cos(a1*p)*Math.cos(a2*p)*Math.sin((o2-o1)*p/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
+function markDone(){ document.querySelectorAll('.node.live').forEach(n=>{ n.classList.remove('live'); }); }
+function save(){ try{ if(G) localStorage.setItem(SAVE, JSON.stringify(G)); }catch(e){} }
+async function advance(c){
+  setStatus('剧情推进中…','info');
+  try{
+    const r=await fetch('/api/chat',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sessionId:curSid,chosen:{key:c.key,text:c.text,target_poi_id:c.target_poi_id}})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||'推进失败');
+    if(j.sessionId && j.sessionId!==curSid){ curSid=j.sessionId; sessionId=j.sessionId; if(G)G.sid=curSid; save(); setStatus('会话已自动续接，剧情推进中…','info'); }
+    listen(curSid);
+  }catch(e){ setStatus('推进出错：'+e.message,'err'); }
+}
+async function finishRun(){
+  setStatus('正在收束剧情…','info');
+  try{
+    const r=await fetch('/api/finish',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sessionId:curSid})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||'结束失败');
+    if(j.sessionId && j.sessionId!==curSid){ curSid=j.sessionId; sessionId=j.sessionId; if(G)G.sid=curSid; save(); }
+    listen(curSid);
+  }catch(e){ setStatus('出错：'+e.message,'err'); }
+}
+boot();
+</script>
+</body>
+</html>
